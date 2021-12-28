@@ -23,10 +23,9 @@ services:
       - 8.8.4.4
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /path/to/conf.ovpn:/conf.ovpn
-    environment:
-     - OVPN_USERNAME=username
-     - OVPN_PASSWORD=password
+      - /home/ubuntu/bismarckv__ssl_vpn_config.ovpn:/conf.ovpn
+    env_file:
+      - credentials.env
     networks:
       myvpn-net:
         ipv4_address: 172.3.0.13
