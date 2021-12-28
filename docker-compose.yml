@@ -12,7 +12,7 @@ services:
   vpn:
     container_name: vpn
     build: alpine-custom
-    image: ovpn-client-alpine
+    image: villcabo/ovpn-client
     privileged: true
     cap_add:
       - NET_ADMIN
