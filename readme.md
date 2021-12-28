@@ -4,7 +4,7 @@ This image is based on **alpine**
 
 Build image with default arguments:
 ```
-docker-compose build
+docker-compose build --force-rm
 ```
 
 Build image with custom arguments:
