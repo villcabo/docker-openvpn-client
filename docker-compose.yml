@@ -23,7 +23,7 @@ services:
       - 8.8.4.4
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /path/to/vpn.ovpn:/conf.ovpn
+      - /path/to/conf.ovpn:/conf.ovpn
     env_file:
       - credentials.env
     networks:
