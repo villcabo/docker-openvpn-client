@@ -11,8 +11,8 @@ RUN sed -i 's/GatewayPorts no/GatewayPorts yes/' /etc/ssh/sshd_config
 RUN sed -i 's/X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
 
 # Create alpine user
-ENV USER=alpine
-ENV PASS=alpine
+ARG USER=alpine
+ARG PASS=alpine
 ENV HOME=/home/$USER
 RUN addgroup -g 1000 $USER
 RUN adduser -u 1000 -G $USER -h $HOME -D $USER
