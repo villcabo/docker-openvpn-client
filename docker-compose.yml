@@ -23,7 +23,7 @@ services:
       - 8.8.4.4
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /home/ubuntu/bismarckv__ssl_vpn_config.ovpn:/conf.ovpn
+      - /path/to/conf.ovpn:/conf.ovpn
     env_file:
       - credentials.env
     networks:
