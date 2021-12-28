@@ -1,0 +1,32 @@
+version: "3.5"
+
+networks:
+  myvpn-net:
+    name: myvpn-net
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.3.0.0/16
+
+services:
+  vpn:
+    container_name: vpn
+    build: alpine-custom
+    image: ovpn-client-alpine
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /path/to/conf.ovpn:/conf.ovpn
+    environment:
+     - OVPN_USERNAME=username
+     - OVPN_PASSWORD=password
+    networks:
+      myvpn-net:
+        ipv4_address: 172.3.0.13
