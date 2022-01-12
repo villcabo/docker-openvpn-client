@@ -9,7 +9,7 @@ docker-compose build --force-rm
 
 Build image with custom arguments:
 ```
-docker-compose build --force-rm --build-arg USER=alpine --build-arg PASS=adminvs
+docker-compose build --force-rm --build-arg USER=alpine --build-arg PASS=alpine
 ```
 
 Start container:
