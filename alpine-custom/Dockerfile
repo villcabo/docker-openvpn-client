@@ -10,9 +10,6 @@ RUN sed -i 's/AllowTcpForwarding no/AllowTcpForwarding yes/' /etc/ssh/sshd_confi
 RUN sed -i 's/GatewayPorts no/GatewayPorts yes/' /etc/ssh/sshd_config
 RUN sed -i 's/X11Forwarding no/X11Forwarding yes/' /etc/ssh/sshd_config
 
-# Setting git
-RUN git config --global user.name "Bismarck Villca Soliz" && git config --global user.email "bismarckv@sintesis.com.bo"
-
 # Create alpine user
 ARG USER=alpine
 ARG PASS=alpine
