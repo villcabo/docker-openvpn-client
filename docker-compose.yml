@@ -23,9 +23,10 @@ services:
       - 8.8.4.4
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /path/to/conf.ovpn:/conf.ovpn
-    env_file:
-      - credentials.env
+      - ${PATH_CONF:-/path/to/vpn.ovpn}:/conf.ovpn
+    environment:
+      OVPN_USERNAME: ${USERNAME:-username}
+      OVPN_PASSWORD: ${PASSWORD:-password}
     networks:
       myvpn-net:
         ipv4_address: 172.3.0.13
