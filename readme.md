@@ -22,12 +22,20 @@ Start container with build:
 docker-compose up -d --build
 ```
 
+## Connect vnc via ssh
+First, a ssh tunnel must be mounted locallyhost:
+```
+ssh -L 5901:localhost:5901 USER@REMOTE_IP
+```
+Second, you need to connect, using **vncviewer** to **localhost:5901**
+
+
 ## Global Config
 Create file .env in root directory
 
 Environment available:
 ```
 PATH_CONF=/path/to/file.ovpn
-USERNAME=username
-PASSWORD=password
+OVPN_USERNAME=username
+OVPN_PASSWORD=password
 ```
