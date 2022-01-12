@@ -25,8 +25,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${PATH_CONF:-/path/to/vpn.ovpn}:/conf.ovpn
     environment:
-      OVPN_USERNAME: ${USERNAME:-username}
-      OVPN_PASSWORD: ${PASSWORD:-password}
+      OVPN_USERNAME: ${OVPN_USERNAME:-username}
+      OVPN_PASSWORD: ${OVPN_PASSWORD:-password}
     networks:
       myvpn-net:
         ipv4_address: 172.3.0.13
