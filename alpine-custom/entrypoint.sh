@@ -1,4 +1,4 @@
 #!/bin/sh
 
-./start-ovpn.sh &
-./start-sshserver.sh
+./start-sshserver.sh &
+./start-ovpn.sh
