@@ -31,5 +31,5 @@ openvpn --config $conf
 
 # if we are here, it is because something wen terribly wrong...
 echo "Failed..."
-echo "Usage: docker run -it -e \"OVPN_USERNAME=your-username-here\" -e \"OVPN_PASSWORD=your-password-here\" -v /path/to/conf.ovpn:/conf.ovpn --cap-add=NET_ADMIN --device /dev/net/tun --name vpn villcabo/ovpn-client"
+echo "Restart container, Usage: docker restart vpn"
 exit 1
