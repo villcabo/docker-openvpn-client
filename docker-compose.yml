@@ -6,7 +6,7 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.3.0.0/16
+        - subnet: 10.0.0.0/8
 
 services:
   vpn:
@@ -30,4 +30,4 @@ services:
       OVPN_PASSWORD: ${OVPN_PASSWORD:-password}
     networks:
       myvpn-net:
-        ipv4_address: 172.3.0.13
+        ipv4_address: 10.0.0.13
