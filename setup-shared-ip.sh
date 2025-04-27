@@ -36,6 +36,14 @@ echo "➔ Interfaz local: $LOCAL_INTERFACE"
 
 # Iterar sobre todas las subredes de SHARED_IPS
 for VPN_SUBNET in $SHARED_IPS; do
+    # Verificar si la ruta ya existe
+    EXISTING_ROUTE=$(ip route show | grep "$VPN_SUBNET" | grep "via $CONTAINER_IP dev $LOCAL_INTERFACE")
+    if [ -n "$EXISTING_ROUTE" ]; then
+        echo "➔ La ruta para $VPN_SUBNET ya existe. Eliminándola..."
+        sudo ip route del "$VPN_SUBNET" via "$CONTAINER_IP" dev "$LOCAL_INTERFACE" 2>/dev/null
+    fi
+
+    # Agregar la nueva ruta
     echo "➔ Agregando ruta para $VPN_SUBNET vía $CONTAINER_IP en $LOCAL_INTERFACE..."
     sudo ip route add "$VPN_SUBNET" via "$CONTAINER_IP" dev "$LOCAL_INTERFACE" 2>/dev/null
 
