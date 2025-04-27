@@ -1,18 +1,21 @@
 #!/bin/sh
 
-VPN_INTERFACE="tun0"      # Interfaz VPN (cambiar si es necesario)
+VPN_INTERFACE="tun0"           # Interfaz VPN (cambiar si es necesario)
 VPN_CONF_FILE="/root/vpn.ovpn" # Archivo de configuración de OpenVPN
 VPN_AUTH_FILE="/root/vpn.auth" # Archivo de autenticación de OpenVPN
 
 # -----------------------------------------------------------------------------------
 echo "$OVPN_USERNAME" >$VPN_AUTH_FILE
-echo "$OVPN_PASSWRD" >>$VPN_AUTH_FILE
+echo "$OVPN_PASSWORD" >>$VPN_AUTH_FILE
 # chmod 0600 $auth
 
 # Launch Openvpn
+echo "➔ Configurando OpenVPN..."
 openvpn --config $VPN_CONF_FILE --auth-user-pass $VPN_AUTH_FILE --daemon
 
 # Esperar a que se establezca la interfaz tun0
+sleep 5
+
 COUNT=0
 while [ $COUNT -lt 30 ]; do
     if ip link show | grep -q $VPN_INTERFACE; then
@@ -29,20 +32,22 @@ if ! ip link show | grep -q $VPN_INTERFACE; then
     echo "Mostrando logs de OpenConnect:"
     cat /var/log/openconnect.log 2>/dev/null || echo "No se encontró el archivo de log"
     exit 1
-fi
+fi  
 echo "➔ OpenVPN connection established."
 
 # -----------------------------------------------------------------------------------
 # Función para configurar el contenedor (ejecutar DENTRO del contenedor)
-echo -e "➔ Configurando el contenedor como puente..."
+echo "➔ Configurando el contenedor como puente..."
 
 # Configurar NAT para la VPN
 iptables -t nat -A POSTROUTING -o $VPN_INTERFACE -j MASQUERADE
 iptables -A FORWARD -i eth0 -o $VPN_INTERFACE -j ACCEPT
 iptables -A FORWARD -i $VPN_INTERFACE -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 
-echo -e "➔ Contenedor configurado. Reglas aplicadas:"
+echo "➔ Contenedor configurado. Reglas aplicadas:"
 iptables -t nat -L POSTROUTING -n -v
+
+
 # -----------------------------------------------------------------------------------
 # Start SSH server
 # echo -e "[+] Iniciando el servidor SSH..."
@@ -51,3 +56,6 @@ iptables -t nat -L POSTROUTING -n -v
 
 # echo -e "[+] Servidor SSH iniciado."
 # -----------------------------------------------------------------------------------
+# Mantener el contenedor en ejecución
+echo "VPN conectada y configurada. Manteniendo el contenedor activo..."
+tail -f /dev/null
