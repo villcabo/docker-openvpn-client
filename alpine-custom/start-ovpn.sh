@@ -1,35 +1,23 @@
 #!/bin/sh
 
-conf="/vpn.conf" auth="/vpn.auth" origconf="/conf.ovpn"
+conf="/vpn.conf"
+auth="/vpn.auth"
 
-if [ -f "$origconf" ];
-then
-    if [ -z ${OVPN_USERNAME+x} ];
-    then
-        echo "No username set..."
-        exit 1
-    fi
-    if [ -z ${OVPN_PASSWORD+x} ];
-    then
-        echo "No password set..."
-        exit 1
-    fi
-else
-    echo "Please provide a configuration file"
-    exit 1
-fi
-
-cat $origconf > $conf
-echo "auth-user-pass $auth" >> $conf
 echo "$OVPN_USERNAME" > $auth
-echo "$OVPN_PASSWORD" >> $auth
+echo "$OVPN_PASSWRD" >> $auth
 chmod 0600 $auth
 
 # Launch Openvpn
+openvpn --config $conf --auth-user-pass $auth --daemon
 
-openvpn --config $conf
+# Wait for OpenVPN to establish the connection
+while ! ip addr show tun0 | grep -q "inet "; do
+    sleep 1
+done
+echo "➔ OpenVPN connection established."
 
-# if we are here, it is because something wen terribly wrong...
-echo "Failed..."
-echo "Restart container, Usage: docker restart vpn"
-exit 1
+# Configure NAT for the VPN
+iptables -t nat -A POSTROUTING -o tun0 -j MASQUERADE
+iptables -A FORWARD -i eth0 -o tun0 -j ACCEPT
+iptables -A FORWARD -i tun0 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+echo "➔ NAT rules applied."

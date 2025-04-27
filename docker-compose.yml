@@ -1,4 +1,4 @@
-version: "3.5"
+name: vpnclient
 
 networks:
   myvpn-net:
@@ -14,20 +14,22 @@ services:
     build: alpine-custom
     image: villcabo/ovpn-client
     restart: unless-stopped
-    privileged: true
     cap_add:
-      - NET_ADMIN
+      - NET_ADMIN # Necesario para configurar interfaces de red
+      - SYS_ADMIN # Necesario para algunas operaciones de red
     devices:
       - /dev/net/tun
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
+    sysctls:
+      net.ipv4.ip_forward: 1
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${PATH_CONF:-/path/to/vpn.ovpn}:/conf.ovpn
+      # - ~/.ssh/config:/root/.ssh/config:ro
+      # - ~/.ssh/id_ed25519:/root/.ssh/id_ed25519
     environment:
       OVPN_USERNAME: ${OVPN_USERNAME:-username}
       OVPN_PASSWORD: ${OVPN_PASSWORD:-password}
+      SHARED_IPS: ${SHARED_IPS}
     networks:
       myvpn-net:
         ipv4_address: 10.0.0.13
