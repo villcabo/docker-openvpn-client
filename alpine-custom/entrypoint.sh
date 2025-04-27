@@ -5,12 +5,12 @@ VPN_CONF_FILE="/vpn.conf" # Archivo de configuración de OpenVPN
 VPN_AUTH_FILE="/vpn.auth" # Archivo de autenticación de OpenVPN
 
 # -----------------------------------------------------------------------------------
-echo "$OVPN_USERNAME" > $auth
-echo "$OVPN_PASSWRD" >> $auth
+echo "$OVPN_USERNAME" > $VPN_AUTH_FILE
+echo "$OVPN_PASSWRD" >> $VPN_AUTH_FILE
 chmod 0600 $auth
 
 # Launch Openvpn
-openvpn --config $conf --auth-user-pass $auth --daemon
+openvpn --config $VPN_CONF_FILE --auth-user-pass $VPN_AUTH_FILE --daemon
 
 # Esperar a que se establezca la interfaz tun0
 COUNT=0
