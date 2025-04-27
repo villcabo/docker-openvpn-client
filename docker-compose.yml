@@ -14,6 +14,7 @@ services:
     build: alpine-custom
     image: villcabo/ovpn-client
     restart: unless-stopped
+    # privileged: true
     cap_add:
       - NET_ADMIN # Necesario para configurar interfaces de red
       - SYS_ADMIN # Necesario para algunas operaciones de red
@@ -23,7 +24,7 @@ services:
       net.ipv4.ip_forward: 1
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${PATH_CONF:-/path/to/vpn.ovpn}:/conf.ovpn
+      - ${PATH_CONF:-/path/to/vpn.ovpn}:/root/vpn.ovpn
       # - ~/.ssh/config:/root/.ssh/config:ro
       # - ~/.ssh/id_ed25519:/root/.ssh/id_ed25519
     environment:

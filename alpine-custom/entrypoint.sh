@@ -1,8 +1,8 @@
 #!/bin/sh
 
 VPN_INTERFACE="tun0"      # Interfaz VPN (cambiar si es necesario)
-VPN_CONF_FILE="/vpn.conf" # Archivo de configuración de OpenVPN
-VPN_AUTH_FILE="/vpn.auth" # Archivo de autenticación de OpenVPN
+VPN_CONF_FILE="/root/vpn.ovpn" # Archivo de configuración de OpenVPN
+VPN_AUTH_FILE="/root/vpn.auth" # Archivo de autenticación de OpenVPN
 
 # -----------------------------------------------------------------------------------
 echo "$OVPN_USERNAME" >$VPN_AUTH_FILE
