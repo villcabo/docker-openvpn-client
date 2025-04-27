@@ -6,15 +6,18 @@ GREEN="\033[0;32m"
 RED="\033[0;31m"
 RESET="\033[0m"
 CYAN="\033[0;36m"
-BOLD=$(tput bold)
-NORMAL=$(tput sgr0)
+BOLD="\033[1m"
+NORMAL="\033[0m"
+YELLOW="\033[0;33m"
 
+
+echo -e "➔ =========================================================================="
 echo -e "➔ Configurando rutas en la máquina local ⏳..."
 
 # Obtener IP del contenedor
 CONTAINER_IP=$(docker inspect "$CONTAINER_NAME" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
 
-echo -e "➔ Obteniendo IP del contenedor ${GREEN}${BOLD}${CONTAINER_NAME}${NORMAL}${RESET}... ⏳"
+echo -e "➔ Obteniendo IP del contenedor ${GREEN}${BOLD}${CONTAINER_NAME}${NORMAL}${RESET}..."
 if [ -z "$CONTAINER_IP" ]; then
     echo -e "➔ ${RED}${BOLD}No se pudo obtener la IP del contenedor.${NORMAL}${RESET} ❌"
     exit 1
@@ -24,6 +27,8 @@ echo -e "➔ IP del contenedor: ${GREEN}${BOLD}${CONTAINER_IP}${NORMAL}${RESET}"
 
 # Obtener la variable SHARED_IPS desde el contenedor
 SHARED_IPS=$(docker exec -it "$CONTAINER_NAME" env | grep '^SHARED_IPS=' | cut -d'=' -f2)
+# Limpiar espacios y saltos de línea ocultos
+SHARED_IPS=$(echo "$SHARED_IPS" | tr -s '[:space:]' ' ')
 
 if [ -z "$SHARED_IPS" ]; then
     echo -e "➔ ${RED}${BOLD}No se pudo obtener la variable SHARED_IPS del contenedor.${NORMAL}${RESET} ❌"
@@ -43,19 +48,20 @@ fi
 echo -e "➔ Interfaz local: ${GREEN}${BOLD}${LOCAL_INTERFACE}${NORMAL}${RESET}"
 
 # Iterar sobre todas las subredes de SHARED_IPS
-for VPN_SUBNET in $SHARED_IPS; do
+echo -e "➔ --------------------------------------------------------------------------"
+for IP in $SHARED_IPS; do
     # Verificar si la ruta ya existe
-    EXISTING_ROUTE=$(ip route show | grep "$VPN_SUBNET" | grep "via $CONTAINER_IP dev $LOCAL_INTERFACE")
+    EXISTING_ROUTE=$(ip route show | grep "$IP" | grep "via $CONTAINER_IP")
     if [ -n "$EXISTING_ROUTE" ]; then
-        echo -e "${RED}➔ La ruta para ${BOLD}${VPN_SUBNET}${NORMAL}${RED} ya existe. Eliminándola... ${RESET}"
-        sudo ip route del "$VPN_SUBNET" via "$CONTAINER_IP" dev "$LOCAL_INTERFACE" 2>/dev/null
+        sudo ip route del $IP via $CONTAINER_IP dev $LOCAL_INTERFACE 2>/dev/null
+        # echo -e "${YELLOW}➔ Ruta eliminada: ${BOLD}${IP} via ${CONTAINER_IP} dev ${LOCAL_INTERFACE}${NORMAL}${RESET}"
     fi
 
     # Agregar la nueva ruta
-    sudo ip route add "$VPN_SUBNET" via "$CONTAINER_IP" dev "$LOCAL_INTERFACE" 2>/dev/null
+    sudo ip route add $IP via $CONTAINER_IP dev $LOCAL_INTERFACE 2>/dev/null
 
     # Mostrar la ruta recién agregada
-    echo -e "${CYAN}➔ Ruta agregada: ${GREEN}${BOLD}${VPN_SUBNET} via ${CONTAINER_IP} dev ${LOCAL_INTERFACE}${NORMAL}${RESET}"
+    echo -e "${CYAN}➔ Ruta agregada: ${GREEN}${BOLD}${IP} via ${CONTAINER_IP} dev ${LOCAL_INTERFACE}${NORMAL}${RESET}"
 done
-
+echo -e "➔ --------------------------------------------------------------------------"
 echo -e "➔ ${GREEN}${BOLD}Configuración de rutas completada.${NORMAL}${RESET} 🚀"
