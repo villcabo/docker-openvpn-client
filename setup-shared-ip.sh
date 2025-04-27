@@ -1,6 +1,6 @@
 # Nombre del contenedor en Docker
-CONTAINER_NAME="vpn_sintesis" # Reemplaza esto por tu nombre real
-SHARED_IPS="199.3.0.0/24 199.14.10.0/24"
+CONTAINER_NAME="ovpn-client" # Reemplaza esto por tu nombre real
+SHARED_IPS="199.3.0.0/24 199.14.10.0/24" # Reemplaza esto por tus IPs reales
 
 # Colores para los logs
 GREEN="\033[0;32m"
