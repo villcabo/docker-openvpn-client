@@ -1,13 +1,13 @@
 #!/bin/sh
 
-VPN_INTERFACE="tun0" # Interfaz VPN (cambiar si es necesario)
+VPN_INTERFACE="tun0"      # Interfaz VPN (cambiar si es necesario)
 VPN_CONF_FILE="/vpn.conf" # Archivo de configuración de OpenVPN
 VPN_AUTH_FILE="/vpn.auth" # Archivo de autenticación de OpenVPN
 
 # -----------------------------------------------------------------------------------
-echo "$OVPN_USERNAME" > $VPN_AUTH_FILE
-echo "$OVPN_PASSWRD" >> $VPN_AUTH_FILE
-chmod 0600 $auth
+echo "$OVPN_USERNAME" >$VPN_AUTH_FILE
+echo "$OVPN_PASSWRD" >>$VPN_AUTH_FILE
+# chmod 0600 $auth
 
 # Launch Openvpn
 openvpn --config $VPN_CONF_FILE --auth-user-pass $VPN_AUTH_FILE --daemon
@@ -21,7 +21,7 @@ while [ $COUNT -lt 30 ]; do
     fi
     echo "➔ Esperando a la interfaz $VPN_INTERFACE... ($COUNT/30)"
     sleep 1
-    COUNT=$((COUNT+1))
+    COUNT=$((COUNT + 1))
 done
 
 if ! ip link show | grep -q $VPN_INTERFACE; then
