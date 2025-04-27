@@ -1,10 +1,10 @@
-# Nombre del servicio en docker-compose
-SERVICE_NAME="vpn_container" # <-- reemplaza esto por tu nombre real
+# Nombre del contenedor en Docker
+CONTAINER_NAME="vpn_sintesis" # Reemplaza esto por tu nombre real
 
 echo "➔ Configurando rutas en la máquina local..."
 
 # Obtener IP del contenedor
-CONTAINER_IP=$(docker compose inspect "$SERVICE_NAME" \
+CONTAINER_IP=$(docker inspect "$CONTAINER_NAME" \
     --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
 
 if [ -z "$CONTAINER_IP" ]; then

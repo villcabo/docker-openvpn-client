@@ -10,7 +10,7 @@ networks:
 
 services:
   vpn:
-    container_name: vpn
+    container_name: vpn_sintesis
     build: alpine-custom
     image: villcabo/ovpn-client
     restart: unless-stopped
