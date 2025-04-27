@@ -1,5 +1,6 @@
 # Nombre del contenedor en Docker
 CONTAINER_NAME="vpn_sintesis" # Reemplaza esto por tu nombre real
+SHARED_IPS="199.3.0.0/24 199.14.10.0/24"
 
 # Colores para los logs
 GREEN="\033[0;32m"
@@ -24,16 +25,6 @@ if [ -z "$CONTAINER_IP" ]; then
 fi
 
 echo -e "➔ IP del contenedor: ${GREEN}${BOLD}${CONTAINER_IP}${NORMAL}${RESET}"
-
-# Obtener la variable SHARED_IPS desde el contenedor
-SHARED_IPS=$(docker exec -it "$CONTAINER_NAME" env | grep '^SHARED_IPS=' | cut -d'=' -f2)
-# Limpiar espacios y saltos de línea ocultos
-SHARED_IPS=$(echo "$SHARED_IPS" | tr -s '[:space:]' ' ')
-
-if [ -z "$SHARED_IPS" ]; then
-    echo -e "➔ ${RED}${BOLD}No se pudo obtener la variable SHARED_IPS del contenedor.${NORMAL}${RESET} ❌"
-    exit 1
-fi
 
 echo -e "➔ Subredes compartidas (SHARED_IPS): ${GREEN}${BOLD}${SHARED_IPS}${NORMAL}${RESET}"
 
