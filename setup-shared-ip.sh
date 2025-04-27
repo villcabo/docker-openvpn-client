@@ -1,6 +1,6 @@
 # Nombre del contenedor en Docker
-CONTAINER_NAME="openvpn-client" # Reemplaza esto por tu nombre real
-SHARED_IPS="10.10.0.0/24 10.20.0.0/24"
+CONTAINER_NAME="ovpn-client" # Reemplaza esto por tu nombre real
+SHARED_IPS="10.10.0.0/24 10.20.0.0/24" # Reemplaza esto por tus IPs reales
 
 # Colores para los logs
 GREEN="\033[0;32m"
