@@ -45,7 +45,6 @@ for IP in $SHARED_IPS; do
     EXISTING_ROUTE=$(ip route show | grep "$IP" | grep "via $CONTAINER_IP")
     if [ -n "$EXISTING_ROUTE" ]; then
         sudo ip route del $IP via $CONTAINER_IP dev $LOCAL_INTERFACE 2>/dev/null
-        # echo -e "${YELLOW}➔ Ruta eliminada: ${BOLD}${IP} via ${CONTAINER_IP} dev ${LOCAL_INTERFACE}${NORMAL}${RESET}"
     fi
 
     # Agregar la nueva ruta
