@@ -14,6 +14,16 @@ fi
 
 echo "➔ IP del contenedor: $CONTAINER_IP"
 
+# Obtener la variable SHARED_IPS desde el contenedor
+SHARED_IPS=$(docker exec -it "$CONTAINER_NAME" env | grep '^SHARED_IPS=' | cut -d'=' -f2)
+
+if [ -z "$SHARED_IPS" ]; then
+    echo "➔ No se pudo obtener la variable SHARED_IPS del contenedor."
+    exit 1
+fi
+
+echo "➔ Subredes compartidas (SHARED_IPS): $SHARED_IPS"
+
 # Obtener interfaz de red asociada a la IP del contenedor
 LOCAL_INTERFACE=$(ip route get "$CONTAINER_IP" | awk '{for(i=1;i<=NF;i++){if($i=="dev"){print $(i+1); exit}}}')
 
