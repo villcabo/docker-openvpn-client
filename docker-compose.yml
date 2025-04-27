@@ -13,7 +13,7 @@ services:
     container_name: vpn_sintesis
     build: alpine-custom
     image: villcabo/ovpn-client
-    restart: unless-stopped
+    # restart: unless-stopped
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
