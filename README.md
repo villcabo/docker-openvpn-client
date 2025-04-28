@@ -22,8 +22,8 @@ Create a `.env` file in the root directory with the following variables:
 
 ```properties
 PATH_CONF=/path/to/file.ovpn
-OVPN_USERNAME=username
-OVPN_PASSWORD=password
+VPN_USERNAME=username
+VPN_PASSWORD=password
 SHARED_IPS="192.168.1.0/24 10.0.0.0/16"
 ```
 
@@ -33,11 +33,11 @@ SHARED_IPS="192.168.1.0/24 10.0.0.0/16"
 - **Description**: Path to the OpenVPN configuration file.
 - **Example**: `/etc/openvpn/client.ovpn`
 
-#### `OVPN_USERNAME`
+#### `VPN_USERNAME`
 - **Description**: Username for OpenVPN authentication.
 - **Example**: `myusername`
 
-#### `OVPN_PASSWORD`
+#### `VPN_PASSWORD`
 - **Description**: Password for OpenVPN authentication.
 - **Example**: `mypassword`
 
