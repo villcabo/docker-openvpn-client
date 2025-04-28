@@ -1,4 +1,4 @@
-name: vpnclient
+name: openvpn-client
 
 networks:
   myvpn-net:
@@ -14,6 +14,8 @@ services:
     build: ubuntu-custom
     image: villcabo/ovpn-client
     restart: unless-stopped
+    networks:
+      myvpn-net:
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
@@ -28,7 +30,5 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${PATH_CONF:-/path/to/vpn.ovpn}:/root/vpn.ovpn
     environment:
-      OVPN_USERNAME: ${OVPN_USERNAME:-username}
-      OVPN_PASSWORD: ${OVPN_PASSWORD:-password}
-    networks:
-      myvpn-net:
+      OVPN_USERNAME: ${OVPN_USERNAME}
+      OVPN_PASSWORD: ${OVPN_PASSWORD}
