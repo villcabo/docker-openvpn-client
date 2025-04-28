@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+set -e
 
 VPN_INTERFACE="tun0"           # Interfaz VPN (cambiar si es necesario)
 VPN_CONF_FILE="/root/vpn.ovpn" # Archivo de configuración de OpenVPN
