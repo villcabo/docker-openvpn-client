@@ -30,5 +30,5 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${PATH_CONF:-/path/to/vpn.ovpn}:/root/vpn.ovpn
     environment:
-      OVPN_USERNAME: ${OVPN_USERNAME}
-      OVPN_PASSWORD: ${OVPN_PASSWORD}
+      OVPN_USERNAME: ${VPN_USERNAME}
+      OVPN_PASSWORD: ${VPN_PASSWORD}
