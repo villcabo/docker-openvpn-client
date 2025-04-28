@@ -1,5 +1,6 @@
 FROM ubuntu:24.04
 
+ENV DEBIAN_FRONTEND=noninteractive
 LABEL maintainer="Bismarck Villca <bismarck.villca@gmail.com>"
 
 # Install dependencies
