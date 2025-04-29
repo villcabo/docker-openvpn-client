@@ -13,7 +13,6 @@ services:
     container_name: ovpn-client
     build: ubuntu-custom
     image: villcabo/ovpn-client
-    restart: unless-stopped
     networks:
       myvpn-net:
     cap_add:
