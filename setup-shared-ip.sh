@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Colores para los logs
+# Colors for logs
 GREEN="\033[0;32m"
 RED="\033[0;31m"
 RESET="\033[0m"
@@ -9,7 +9,7 @@ BOLD="\033[1m"
 NORMAL="\033[0m"
 YELLOW="\033[0;33m"
 
-# Función para imprimir mensajes de error y salir
+# Function to print error messages and exit
 error_exit() {
     echo -e "➔ ${RED}${BOLD}$1${NORMAL}${RESET} ❌"
     exit 1
@@ -19,12 +19,12 @@ error_message() {
     echo -e "➔ ${RED}${BOLD}$1${NORMAL}${RESET} ❌"
 }
 
-# Función para imprimir mensajes de información
+# Function to print info messages
 info_message() {
     echo -e "➔ $1"
 }
 
-# Función para imprimir mensajes de éxito
+# Function to print success messages
 success_message() {
     echo -e "➔ ${GREEN}${BOLD}$1${NORMAL}${RESET} \t🚀"
 }
@@ -33,7 +33,7 @@ warning_message() {
     echo -e "➔ ${YELLOW}${BOLD}$1${NORMAL}${RESET} \t⚠️"
 }
 
-# Verificar si se ejecuta con parámetro de eliminación
+# Check if running with delete parameter
 DELETE_MODE=false
 for arg in "$@"; do
     if [ "$arg" == "-del" ] || [ "$arg" == "--delete" ]; then
@@ -42,93 +42,93 @@ for arg in "$@"; do
     fi
 done
 
-# Leer variables del archivo .env
+# Read variables from .env file
 ENV_FILE="$(dirname "$0")/.env"
 if [ ! -f "$ENV_FILE" ]; then
-    error_exit "El archivo .env no existe en la ruta del script"
+    error_exit ".env file does not exist in script directory"
 fi
 
-# Cargar variables desde .env
+# Load variables from .env
 source "$ENV_FILE"
 
-# Procesar según el modo (eliminación o configuración)
+# Process according to mode (delete or configure)
 if [ "$DELETE_MODE" = true ]; then
-    # MODO DE ELIMINACIÓN
-    # En modo eliminación, solo necesitamos SHARED_IPS
+    # DELETE MODE
+    # In delete mode, we only need SHARED_IPS
     if [ -z "$SHARED_IPS" ]; then
-        error_exit "La variable SHARED_IPS no está definida en .env"
+        error_exit "SHARED_IPS variable not defined in .env"
     fi
     
     echo -e "➔ =========================================================================="
-    info_message "Eliminando rutas previamente configuradas ⏳..."
-    info_message "Subredes compartidas (SHARED_IPS): ${GREEN}${BOLD}${SHARED_IPS}${NORMAL}${RESET}"
+    info_message "Removing previously configured routes ⏳..."
+    info_message "Shared subnets (SHARED_IPS): ${GREEN}${BOLD}${SHARED_IPS}${NORMAL}${RESET}"
     
-    # Iterar sobre todas las subredes de SHARED_IPS y eliminarlas
+    # Iterate through all SHARED_IPS subnets and remove them
     echo -e "➔ --------------------------------------------------------------------------"
     for IP in $SHARED_IPS; do
-        # Eliminar la ruta directamente sin verificar el contenedor
+        # Remove route directly without container verification
         sudo ip route del $IP 2>/dev/null
         if [ $? -eq 0 ]; then
-            info_message "Ruta eliminada: ${YELLOW}${BOLD}${IP}${NORMAL}${RESET}"
+            info_message "Route removed: ${YELLOW}${BOLD}${IP}${NORMAL}${RESET}"
         else
-            warning_message "No existe o no se pudo eliminar la ruta: ${BOLD}${IP}${NORMAL}${RESET}"
+            warning_message "Route does not exist or couldn't be removed: ${BOLD}${IP}${NORMAL}${RESET}"
         fi
     done
     echo -e "➔ --------------------------------------------------------------------------"
-    success_message "Eliminación de rutas completada."
+    success_message "Route removal completed."
 else
-    # MODO DE CONFIGURACIÓN
-    # Verificar las variables necesarias para la configuración
+    # CONFIGURATION MODE
+    # Verify required variables for configuration
     if [ -z "$CONTAINER_NAME" ]; then
-        error_exit "La variable CONTAINER_NAME no está definida en .env"
+        error_exit "CONTAINER_NAME variable not defined in .env"
     fi
 
     if [ -z "$SHARED_IPS" ]; then
-        error_exit "La variable SHARED_IPS no está definida en .env"
+        error_exit "SHARED_IPS variable not defined in .env"
     fi
 
     echo -e "➔ =========================================================================="
-    info_message "Configurando rutas en la máquina local ⏳..."
+    info_message "Configuring routes on local machine ⏳..."
 
-    # Obtener IP del contenedor
-    info_message "Obteniendo IP del contenedor ${GREEN}${BOLD}${CONTAINER_NAME}${NORMAL}${RESET}..."
+    # Get container IP
+    info_message "Getting IP for container ${GREEN}${BOLD}${CONTAINER_NAME}${NORMAL}${RESET}..."
     CONTAINER_IP=$(docker inspect "$CONTAINER_NAME" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
 
     if [ -z "$CONTAINER_IP" ]; then
-        error_exit "No se pudo obtener la IP del contenedor."
+        error_exit "Could not get container IP."
     fi
 
-    info_message "IP del contenedor: ${GREEN}${BOLD}${CONTAINER_IP}${NORMAL}${RESET}"
-    info_message "Subredes compartidas (SHARED_IPS): ${GREEN}${BOLD}${SHARED_IPS}${NORMAL}${RESET}"
+    info_message "Container IP: ${GREEN}${BOLD}${CONTAINER_IP}${NORMAL}${RESET}"
+    info_message "Shared subnets (SHARED_IPS): ${GREEN}${BOLD}${SHARED_IPS}${NORMAL}${RESET}"
 
-    # Obtener interfaz de red asociada a la IP del contenedor
+    # Get network interface associated with container IP
     LOCAL_INTERFACE=$(ip route get "$CONTAINER_IP" | awk '{for(i=1;i<=NF;i++){if($i=="dev"){print $(i+1); exit}}}')
 
     if [ -z "$LOCAL_INTERFACE" ]; then
-        error_exit "No se pudo obtener la interfaz de red local."
+        error_exit "Could not get local network interface."
     fi
 
-    info_message "Interfaz local: ${GREEN}${BOLD}${LOCAL_INTERFACE}${NORMAL}${RESET}"
+    info_message "Local interface: ${GREEN}${BOLD}${LOCAL_INTERFACE}${NORMAL}${RESET}"
 
-    # Iterar sobre todas las subredes de SHARED_IPS
+    # Iterate through all SHARED_IPS subnets
     echo -e "➔ --------------------------------------------------------------------------"
     for IP in $SHARED_IPS; do
-        # Verificar si la ruta existe
+        # Check if route exists
         EXISTING_ROUTE=$(ip route show | grep "$IP" | grep "via $CONTAINER_IP")
         
-        # Si la ruta ya existe, eliminarla primero
+        # If route exists, remove it first
         if [ -n "$EXISTING_ROUTE" ]; then
             sudo ip route del $IP via $CONTAINER_IP dev $LOCAL_INTERFACE 2>/dev/null
         fi
 
-        # Agregar la nueva ruta
+        # Add new route
         sudo ip route add $IP via $CONTAINER_IP dev $LOCAL_INTERFACE 2>/dev/null
         if [ $? -eq 0 ]; then
-            success_message "Ruta agregada: ${GREEN}${BOLD}${IP} via ${CONTAINER_IP} dev ${LOCAL_INTERFACE}${NORMAL}${RESET}"
+            success_message "Route added: ${GREEN}${BOLD}${IP} via ${CONTAINER_IP} dev ${LOCAL_INTERFACE}${NORMAL}${RESET}"
         else
-            echo -e "${RED}➔ Error al agregar ruta: ${BOLD}${IP} via ${CONTAINER_IP} dev ${LOCAL_INTERFACE}${NORMAL}${RESET}"
+            echo -e "${RED}➔ Error adding route: ${BOLD}${IP} via ${CONTAINER_IP} dev ${LOCAL_INTERFACE}${NORMAL}${RESET}"
         fi
     done
     echo -e "➔ --------------------------------------------------------------------------"
-    success_message "Configuración de rutas completada."
+    success_message "Route configuration completed."
 fi

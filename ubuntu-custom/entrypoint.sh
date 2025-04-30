@@ -1,56 +1,52 @@
 #!/bin/bash
 set -e
 
-VPN_INTERFACE="tun0"           # Interfaz VPN (cambiar si es necesario)
-VPN_CONF_FILE="/root/vpn.ovpn" # Archivo de configuración de OpenVPN
-VPN_AUTH_FILE="/root/vpn.auth" # Archivo de autenticación de OpenVPN
+VPN_INTERFACE="tun0"           # VPN interface (change if necessary)
+VPN_CONF_FILE="/root/vpn.ovpn" # OpenVPN configuration file
+VPN_AUTH_FILE="/root/vpn.auth" # OpenVPN authentication file
 
-# Colores para los logs
-BOLD="\033[1m"
-NORMAL="\033[0m"
-
-# -----------------------------------------------------------------------------------
+# Write credentials to the authentication file
 echo "$OVPN_USERNAME" >$VPN_AUTH_FILE
 echo "$OVPN_PASSWORD" >>$VPN_AUTH_FILE
 
-# Launch Openvpn
-echo "${BOLD}➔ Configurando OpenVPN ⏳...${NORMAL}"
+# Launch OpenVPN
+echo "Configuring OpenVPN..."
 openvpn --config $VPN_CONF_FILE --auth-user-pass $VPN_AUTH_FILE --daemon
 
 COUNT=0
 while [ $COUNT -lt 30 ]; do
     if ip link show | grep -q $VPN_INTERFACE; then
-        echo "${BOLD}➔ Interfaz $VPN_INTERFACE detectada! ✅${NORMAL}"
+        echo "VPN interface $VPN_INTERFACE detected!"
         break
     fi
-    echo "${BOLD}➔ Esperando a la interfaz $VPN_INTERFACE... ($COUNT/30)${NORMAL}"
+    echo "Waiting for VPN interface $VPN_INTERFACE... ($COUNT/30)"
     sleep 1
     COUNT=$((COUNT + 1))
 done
 
 if ! ip link show | grep -q $VPN_INTERFACE; then
-    echo "${BOLD}➔ Error: No se pudo establecer la interfaz tun0 después de 30 segundos ❌${NORMAL}"
-    echo "Mostrando logs de OpenConnect:"
-    cat /var/log/openconnect.log 2>/dev/null || echo "No se encontró el archivo de log"
+    echo "Error: Unable to establish VPN interface $VPN_INTERFACE after 30 seconds."
+    echo "Displaying OpenConnect logs:"
+    cat /var/log/openconnect.log 2>/dev/null || echo "Log file not found."
     exit 1
 fi
-echo "${BOLD}➔ OpenVPN connection established. 🚀${NORMAL}"
+echo "OpenVPN connection established."
 
 # -----------------------------------------------------------------------------------
-# Función para configurar el contenedor (ejecutar DENTRO del contenedor)
+# Function to configure the container (run INSIDE the container)
 echo ""
-echo "${BOLD}➔ Configurando el contenedor como puente ⏳...${NORMAL}"
+echo "Configuring the container as a bridge..."
 
-# Configurar NAT para la VPN
+# Configure NAT for the VPN
 iptables -t nat -A POSTROUTING -o $VPN_INTERFACE -j MASQUERADE
 iptables -A FORWARD -i eth0 -o $VPN_INTERFACE -j ACCEPT
 iptables -A FORWARD -i $VPN_INTERFACE -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 
-echo "➔ Contenedor configurado. Reglas aplicadas ✅:"
+echo "Container configured. Rules applied:"
 iptables -t nat -L POSTROUTING -n -v
 
 # -----------------------------------------------------------------------------------
-# Mantener el contenedor en ejecución
+# Keep the container running
 echo ""
-echo "${BOLD}➔ VPN conectada y configurada. Manteniendo el contenedor activo 🚀${NORMAL}"
+echo "VPN connected and configured. Keeping the container active."
 tail -f /dev/null
