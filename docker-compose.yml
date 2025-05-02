@@ -1,8 +1,7 @@
 name: openvpn-client
 
 networks:
-  myvpn-net:
-    name: myvpn-net
+  vpn-network:
     driver: bridge
     ipam:
       config:
@@ -10,11 +9,12 @@ networks:
 
 services:
   vpn:
-    container_name: ovpn-client
+    container_name: openvpn-client
     build: ubuntu-custom
     image: villcabo/openvpn-client
+    restart: unless-stopped
     networks:
-      myvpn-net:
+      vpn-network:
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
