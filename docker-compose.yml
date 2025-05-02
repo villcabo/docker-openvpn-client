@@ -12,7 +12,7 @@ services:
   vpn:
     container_name: ovpn-client
     build: ubuntu-custom
-    image: villcabo/ovpn-client
+    image: villcabo/openvpn-client
     networks:
       myvpn-net:
     cap_add:
