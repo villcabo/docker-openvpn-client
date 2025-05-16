@@ -19,26 +19,26 @@ esac
 
 # Function to print error messages and exit
 error_exit() {
-    echo -e "➔ ${RED}${BOLD}$1${NORMAL}${RESET} ❌"
+    echo -e "${RED}${BOLD}$1${NORMAL}${RESET} ❌"
     exit 1
 }
 
 error_message() {
-    echo -e "➔ ${RED}${BOLD}$1${NORMAL}${RESET} ❌"
+    echo -e "${RED}${BOLD}$1${NORMAL}${RESET} ❌"
 }
 
 # Function to print info messages
 info_message() {
-    echo -e "➔ $1"
+    echo -e "$1"
 }
 
 # Function to print success messages
 success_message() {
-    echo -e "➔ ${GREEN}${BOLD}$1${NORMAL}${RESET} \t🚀"
+    echo -e "${GREEN}${BOLD}$1${NORMAL}${RESET}"
 }
 
 warning_message() {
-    echo -e "➔ ${YELLOW}${BOLD}$1${NORMAL}${RESET} \t⚠️"
+    echo -e "${YELLOW}${BOLD}$1${NORMAL}${RESET}"
 }
 
 # Check if OS is supported
@@ -147,12 +147,12 @@ if [ "$DELETE_MODE" = true ]; then
         error_exit "SHARED_IPS variable not defined in .env"
     fi
     
-    echo -e "➔ =========================================================================="
+    echo -e "=========================================================================="
     info_message "Removing previously configured routes ⏳..."
     info_message "Shared subnets (SHARED_IPS): ${GREEN}${BOLD}${SHARED_IPS}${NORMAL}${RESET}"
     
     # Iterate through all SHARED_IPS subnets and remove them
-    echo -e "➔ --------------------------------------------------------------------------"
+    echo -e "--------------------------------------------------------------------------"
     for IP in $SHARED_IPS; do
         # Remove route directly without container verification
         delete_route $IP "" ""
@@ -162,7 +162,7 @@ if [ "$DELETE_MODE" = true ]; then
             warning_message "Route does not exist or couldn't be removed: ${BOLD}${IP}${NORMAL}${RESET}"
         fi
     done
-    echo -e "➔ --------------------------------------------------------------------------"
+    echo -e "--------------------------------------------------------------------------"
     success_message "Route removal completed."
 else
     # CONFIGURATION MODE
@@ -175,7 +175,7 @@ else
         error_exit "SHARED_IPS variable not defined in .env"
     fi
 
-    echo -e "➔ =========================================================================="
+    echo -e "=========================================================================="
     info_message "Configuring routes on local machine ⏳..."
 
     # Get container IP - Same for both OS types
@@ -199,7 +199,7 @@ else
     info_message "Local interface: ${GREEN}${BOLD}${LOCAL_INTERFACE}${NORMAL}${RESET}"
 
     # Iterate through all SHARED_IPS subnets
-    echo -e "➔ --------------------------------------------------------------------------"
+    echo -e "--------------------------------------------------------------------------"
     for IP in $SHARED_IPS; do
         # Check if route exists
         check_route_exists "$IP" "$CONTAINER_IP"
@@ -220,12 +220,12 @@ else
             fi
         else
             if [ "$OS_TYPE" == "Linux" ]; then
-                echo -e "${RED}➔ Error adding route: ${BOLD}${IP} via ${CONTAINER_IP} dev ${LOCAL_INTERFACE}${NORMAL}${RESET}"
+                echo -e "${RED}Error adding route: ${BOLD}${IP} via ${CONTAINER_IP} dev ${LOCAL_INTERFACE}${NORMAL}${RESET}"
             else
-                echo -e "${RED}➔ Error adding route: ${BOLD}${IP} gateway ${CONTAINER_IP}${NORMAL}${RESET}"
+                echo -e "${RED}Error adding route: ${BOLD}${IP} gateway ${CONTAINER_IP}${NORMAL}${RESET}"
             fi
         fi
     done
-    echo -e "➔ --------------------------------------------------------------------------"
+    echo -e "--------------------------------------------------------------------------"
     success_message "Route configuration completed."
 fi
