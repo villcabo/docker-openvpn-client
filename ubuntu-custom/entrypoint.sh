@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+echo "Killing any existing openvpn processes (if any)..."
+pkill openvpn 2>/dev/null || true
+
 VPN_INTERFACE="tun0"           # VPN interface (change if necessary)
 VPN_CONF_FILE="/root/vpn.ovpn" # OpenVPN configuration file
 VPN_AUTH_FILE="/root/vpn.auth" # OpenVPN authentication file
