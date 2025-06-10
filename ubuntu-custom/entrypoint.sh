@@ -41,7 +41,10 @@ echo ""
 echo "Configuring the container as a bridge..."
 
 # Configure NAT for the VPN
-iptables -t nat -A POSTROUTING -o $VPN_INTERFACE -j MASQUERADE
+# Only add MASQUERADE rule if it does not already exist
+if ! iptables -t nat -C POSTROUTING -o $VPN_INTERFACE -j MASQUERADE 2>/dev/null; then
+    iptables -t nat -A POSTROUTING -o $VPN_INTERFACE -j MASQUERADE
+fi
 iptables -A FORWARD -i eth0 -o $VPN_INTERFACE -j ACCEPT
 iptables -A FORWARD -i $VPN_INTERFACE -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 
