@@ -59,12 +59,20 @@ is_container_running() {
 
 # Function to check if OpenVPN service is running inside container
 is_service_running() {
-    log info "Checking if OpenVPN service is running..."
-    if docker exec "${CONTAINER_NAME}" pgrep -x openvpn >/dev/null; then
-        log success "OpenVPN service is running"
+    log info "Checking if OpenVPN service is running and connected..."
+    
+    # First check if openvpn process is running
+    if ! docker exec "${CONTAINER_NAME}" pgrep -x openvpn >/dev/null; then
+        log warning "OpenVPN process is not running"
+        return 1
+    fi
+    
+    # Then check if VPN connection is actually working by pinging a VPN server
+    if docker exec "${CONTAINER_NAME}" ping -c 1 -W 3 199.3.0.108 >/dev/null 2>&1; then
+        log success "OpenVPN service is running and connected"
         return 0
     else
-        log warning "OpenVPN service is not running"
+        log warning "OpenVPN process is running but VPN connection is not working"
         return 1
     fi
 }
