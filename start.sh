@@ -87,18 +87,29 @@ start_container_service() {
     fi
     
     log info "Starting OpenVPN service..."
-    if docker exec "${CONTAINER_NAME}" bash "${ENTRYPOINT_SCRIPT}"; then
-        # Give the service a moment to start
+    # Execute entrypoint script in background to avoid blocking
+    if docker exec -d "${CONTAINER_NAME}" bash "${ENTRYPOINT_SCRIPT}"; then
+        # Give the service time to start
         log info "Waiting for service to initialize..."
-        sleep 2
+        sleep 5
         
-        if is_service_running; then
-            log success "Service started successfully"
-            return 0
-        else
-            log warning "Service script executed but OpenVPN process not detected"
-            return 1
-        fi
+        # Check multiple times to ensure service is stable
+        local attempts=0
+        local max_attempts=10
+        
+        while [ $attempts -lt $max_attempts ]; do
+            if is_service_running; then
+                log success "Service started successfully"
+                return 0
+            else
+                log info "Checking service status... (attempt $((attempts + 1))/$max_attempts)"
+                sleep 2
+                attempts=$((attempts + 1))
+            fi
+        done
+        
+        log warning "Service script executed but OpenVPN process not detected after $max_attempts attempts"
+        return 1
     else
         log error "Failed to execute service script"
         return 1
