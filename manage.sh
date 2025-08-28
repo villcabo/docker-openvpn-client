@@ -8,12 +8,13 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 BOLD='\033[1m'
 UNDERLINE='\033[4m'
-INFO_ICON='\xE2\x84\xB9'
-SUCCESS_ICON='\xE2\x9C\x85'
-WARNING_ICON='\xE2\x9A\xA0'
-ERROR_ICON='\xE2\x9C\x96'
-START_ICON='\xF0\x9F\x9A\x80'
-STOP_ICON='\xF0\x9F\x9A\xAB'
+# Modern and clean icons (suggested)
+SUCCESS_ICON='✔'
+WARNING_ICON='⚠️'
+ERROR_ICON='❌'
+START_ICON='🚀'
+STOP_ICON='⏳'
+READY_ICON='🎉'
 
 
 # Config
@@ -61,6 +62,9 @@ log() {
             ;;
         stop)
             echo -e "${YELLOW}${message} ${STOP_ICON}${NC}"
+            ;;
+        ready)
+            echo -e "${GREEN}${message} ${READY_ICON}${NC}"
             ;;
         *)
             echo -e "${message}"
@@ -111,16 +115,18 @@ add_routes() {
     log info "Container IP: $CONTAINER_IP"
     log info "Local interface: $LOCAL_INTERFACE"
     log info "Shared subnets: $SHARED_IPS"
+    printf "\n${BOLD}%-25s %-18s %-18s %-3s${NC}\n" "Subnet" "Gateway" "Interface" "Status"
+    printf "%-25s %-18s %-18s %-3s\n" "-------------------------" "------------------" "------------------" "------"
     for IP in $SHARED_IPS; do
         # Check if route already exists
         if ip route show | grep -q "^$IP "; then
-            log info "Route already exists: $IP"
+            printf "%-25s %-18s %-18s %s ${WARNING_ICON}\n" "$IP" "$CONTAINER_IP" "$LOCAL_INTERFACE" "Already exists"
         else
             ip route add $IP via $CONTAINER_IP dev $LOCAL_INTERFACE 2>/dev/null
             if [ $? -eq 0 ]; then
-                log success "Route added: $IP via $CONTAINER_IP dev $LOCAL_INTERFACE"
+                printf "%-25s %-18s %-18s %s ${SUCCESS_ICON}\n" "$IP" "$CONTAINER_IP" "$LOCAL_INTERFACE" "Added"
             else
-                log warning "Could not add route: $IP"
+                printf "%-25s %-18s %-18s %s ${WARNING_ICON}\n" "$IP" "$CONTAINER_IP" "$LOCAL_INTERFACE" "Error"
             fi
         fi
     done
@@ -186,6 +192,9 @@ start_vpn() {
     section "[3/3] Route Configuration"
     log info "Configuring routes for shared subnets..."
     add_routes
+    log ""
+    log ready "All operations completed successfully!"
+    log ""
 }
 
 stop_vpn() {
