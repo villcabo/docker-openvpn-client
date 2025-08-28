@@ -17,6 +17,7 @@ STOP_ICON='\xF0\x9F\x9A\xAB'
 
 # Config
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd)"
+cd "$SCRIPT_DIR" || { echo "Failed to change to script directory: $SCRIPT_DIR"; exit 1; }
 CONTAINER_NAME="openvpn-client"
 ENTRYPOINT_SCRIPT="/entrypoint.sh"
 ENV_FILE="${SCRIPT_DIR}/.env"
