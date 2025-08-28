@@ -15,9 +15,17 @@ ERROR_ICON='\xE2\x9C\x96'
 START_ICON='\xF0\x9F\x9A\x80'
 STOP_ICON='\xF0\x9F\x9A\xAB'
 
+
 # Config
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd)"
 cd "$SCRIPT_DIR" || { echo "Failed to change to script directory: $SCRIPT_DIR"; exit 1; }
+
+# Validate root permissions
+if [ "$EUID" -ne 0 ]; then
+    echo -e "${RED}ERROR: This script must be run as root or with sudo.${NC}"
+    exit 1
+fi
+
 CONTAINER_NAME="openvpn-client"
 ENTRYPOINT_SCRIPT="/entrypoint.sh"
 ENV_FILE="${SCRIPT_DIR}/.env"
@@ -108,7 +116,7 @@ add_routes() {
         if ip route show | grep -q "^$IP "; then
             log info "Route already exists: $IP"
         else
-            sudo ip route add $IP via $CONTAINER_IP dev $LOCAL_INTERFACE 2>/dev/null
+            ip route add $IP via $CONTAINER_IP dev $LOCAL_INTERFACE 2>/dev/null
             if [ $? -eq 0 ]; then
                 log success "Route added: $IP via $CONTAINER_IP dev $LOCAL_INTERFACE"
             else
@@ -124,7 +132,7 @@ delete_routes() {
         return 1
     fi
     for IP in $SHARED_IPS; do
-        sudo ip route del $IP 2>/dev/null
+        ip route del $IP 2>/dev/null
         if [ $? -eq 0 ]; then
             log stop "Route removed: $IP"
         else

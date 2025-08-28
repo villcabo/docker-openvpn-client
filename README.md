@@ -38,23 +38,44 @@ sudo bash manage.sh -k
 bash manage.sh --help
 ```
 
-## Global Configuration
 
-Create a `.env` file in the root directory with the following variables:
+## Environment Configuration
 
-```properties
-PATH_CONF=/path/to/file.ovpn
-VPN_USERNAME=username
-VPN_PASSWORD=password
+### How to configure your environment
+
+1. Copy the example file:
+	```bash
+	cp .env.example .env
+	```
+2. Edit the `.env` file and set all variables according to your environment.
+
+### Variables in `.env`
+
+| Variable            | Description                                                                 | Example                          |
+|---------------------|-----------------------------------------------------------------------------|----------------------------------|
+| PATH_CONF           | Path to your OpenVPN configuration file (.ovpn). Must be accessible.         | /home/user/vpn/myvpn.ovpn        |
+| VPN_USERNAME        | Username for OpenVPN authentication.                                         | myusername                       |
+| VPN_PASSWORD        | Password for OpenVPN authentication.                                         | mypassword                       |
+| CONTAINER_NAME      | Name of the Docker container for the VPN client. Must match docker-compose.   | openvpn-client                   |
+| SHARED_IPS          | Space-separated list of subnets to route through the VPN container.           | "192.168.1.0/24 10.0.0.0/16"    |
+| VPN_VALIDATION_IP   | IP address to ping for VPN connectivity validation. Use a reachable IP.       | 8.8.8.8                          |
+
+#### Example `.env` file
+
+```dotenv
+PATH_CONF=/home/user/vpn/myvpn.ovpn
+VPN_USERNAME=myusername
+VPN_PASSWORD=mypassword
+CONTAINER_NAME=openvpn-client
 SHARED_IPS="192.168.1.0/24 10.0.0.0/16"
 VPN_VALIDATION_IP=8.8.8.8
 ```
 
-- `PATH_CONF`: Path to the OpenVPN configuration file.
-- `VPN_USERNAME`: Username for OpenVPN authentication.
-- `VPN_PASSWORD`: Password for OpenVPN authentication.
-- `SHARED_IPS`: Space-separated list of subnets to route through the VPN container.
-- `VPN_VALIDATION_IP`: IP address to ping for VPN connectivity validation (default: 199.3.0.108).
+> **Note:**
+> - All variables are required for correct operation.
+> - The container name must match the name in your `docker-compose.yml`.
+> - The OpenVPN config file must exist and be accessible from the container.
+> - The validation IP should be an IP that is only reachable when the VPN is connected (e.g., Google DNS or your VPN gateway).
 
 ## How It Works
 
