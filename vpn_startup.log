@@ -1,6 +1,0 @@
-[2025-08-03 20:58:55] === Starting VPN Service Manager ===
-[2025-08-03 20:58:55] Container openvpn-client is running
-[2025-08-03 20:58:55] Container status before restart:
-[2025-08-03 20:58:55] Restarting service in openvpn-client...
-[2025-08-03 20:58:55] [0;31mFailed to restart service[0m
-[2025-08-03 20:58:55] [0;31mFailed to restart service, skipping setup script[0m
