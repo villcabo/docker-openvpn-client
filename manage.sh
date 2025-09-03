@@ -31,19 +31,12 @@ fi
 CONTAINER_NAME="openvpn-client"
 ENTRYPOINT_SCRIPT="/entrypoint.sh"
 ENV_FILE="${SCRIPT_DIR}/.env"
-VPN_VALIDATION_IP="199.3.0.108"
 VPN_STARTUP_MESSAGE="VPN connected and configured. Keeping the container active."
 DEBUG_MODE="false"
 
 # Load .env if exists
 if [ -f "$ENV_FILE" ]; then
     source "$ENV_FILE"
-    # Si la variable está definida en .env, la usamos
-    if [ ! -z "$VPN_VALIDATION_IP_ENV" ]; then
-        VPN_VALIDATION_IP="$VPN_VALIDATION_IP_ENV"
-    elif [ ! -z "$VPN_VALIDATION_IP" ]; then
-        VPN_VALIDATION_IP="$VPN_VALIDATION_IP"
-    fi
 fi
 
 # Logging functions

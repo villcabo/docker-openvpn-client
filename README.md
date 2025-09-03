@@ -32,6 +32,12 @@ or
 sudo bash manage.sh -k
 ```
 
+### Debug Service Validation
+
+```bash
+sudo bash manage.sh --debug
+```
+
 ### Show Help
 
 ```bash
@@ -58,7 +64,6 @@ bash manage.sh --help
 | VPN_PASSWORD        | Password for OpenVPN authentication.                                         | mypassword                       |
 | CONTAINER_NAME      | Name of the Docker container for the VPN client. Must match docker-compose.   | openvpn-client                   |
 | SHARED_IPS          | Space-separated list of subnets to route through the VPN container.           | "192.168.1.0/24 10.0.0.0/16"    |
-| VPN_VALIDATION_IP   | IP address to ping for VPN connectivity validation. Use a reachable IP.       | 8.8.8.8                          |
 
 #### Example `.env` file
 
@@ -68,14 +73,13 @@ VPN_USERNAME=myusername
 VPN_PASSWORD=mypassword
 CONTAINER_NAME=openvpn-client
 SHARED_IPS="192.168.1.0/24 10.0.0.0/16"
-VPN_VALIDATION_IP=8.8.8.8
 ```
 
 > **Note:**
 > - All variables are required for correct operation.
 > - The container name must match the name in your `docker-compose.yml`.
 > - The OpenVPN config file must exist and be accessible from the container.
-> - The validation IP should be an IP that is only reachable when the VPN is connected (e.g., Google DNS or your VPN gateway).
+> - The service validation now uses VPN interface detection instead of ping tests.
 
 ## How It Works
 
