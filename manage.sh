@@ -231,10 +231,10 @@ stop_vpn() {
     delete_routes
     section "[2/2] Container Shutdown"
     if is_container_running; then
-        log info "Stopping container ${ICON_LOADING}..."
-        docker stop "$CONTAINER_NAME"
+        log info "Stopping and removing container ${ICON_LOADING}..."
+        docker compose down
         log ""
-        log success "Container stopped ${ICON_READY}."
+        log success "Container stopped and removed ${ICON_READY}."
         log ""
     else
         log success "Container is already stopped ${ICON_READY}."
