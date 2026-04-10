@@ -9,9 +9,9 @@ networks:
 
 services:
   vpn:
-    container_name: openvpn-client
+    container_name: ${CONTAINER_NAME:-openvpn-client}
     build: ubuntu-custom
-    image: villcabo/openvpn-client
+    image: villcabo/openvpn-client:1.0.0
     restart: unless-stopped
     networks:
       vpn-network:
