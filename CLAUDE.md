@@ -14,7 +14,8 @@ Manage the VPN (all operations go through `manage.sh`, which must run as root be
 
 ```bash
 sudo bash manage.sh --start   # or -s : start container, verify OpenVPN, add host routes
-sudo bash manage.sh --stop    # or -k : remove host routes, docker compose down
+sudo bash manage.sh --stop    # or -k : remove host routes only (container stays running)
+sudo bash manage.sh --down    # remove host routes AND stop/remove the container
 sudo bash manage.sh --debug   # run service validation with verbose debug logging
 bash manage.sh --help         # or -h
 ```
@@ -49,7 +50,8 @@ The project is a thin wrapper that turns a disposable Ubuntu container into a LA
 3. **`manage.sh` — host-side orchestrator.** Run with `sudo`. Key phases:
    - `start_vpn`: ensures the container is up (`docker compose up -d`), validates the OpenVPN service via `is_service_running` (checks `pgrep openvpn` + presence of a `tun*` interface inside the container — not a ping test), and if missing, re-runs `/entrypoint.sh` via `docker exec`. Then calls `add_routes`.
    - `add_routes` / `delete_routes`: for each subnet in `SHARED_IPS`, runs `ip route add <subnet> via <container-ip> dev <local-iface>` on the host. The container IP comes from `docker inspect`; the local interface is derived from `ip route get <container-ip>`. This is what makes the host (and anything routing through it) send traffic for those subnets through the VPN container.
-   - `stop_vpn`: removes those routes, then `docker compose down` (removes the container, not just stops it).
+   - `stop_vpn` (`--stop`): removes host routes only. The container and VPN session stay up.
+   - `down_vpn` (`--down`): removes host routes **and** runs `docker compose down` (removes the container, not just stops it).
    - `--debug` flips `DEBUG_MODE=true` which enables the `log debug` branch, currently used to trace `is_service_running`.
 
 ### Things to know before editing

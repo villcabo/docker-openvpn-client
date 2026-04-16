@@ -75,7 +75,8 @@ section() {
 show_help() {
     echo -e "${BOLD}Usage:${NC}"
     echo -e "  bash manage.sh --start | -s      Start VPN service and configure routes"
-    echo -e "  bash manage.sh --stop  | -k      Stop VPN service and remove routes"
+    echo -e "  bash manage.sh --stop  | -k      Remove host routes (container stays running)"
+    echo -e "  bash manage.sh --down            Remove routes AND stop/remove the container"
     echo -e "  bash manage.sh --debug           Enable verbose debug output (modifier or standalone check)"
     echo -e "  bash manage.sh --help  | -h      Show this help"
     echo -e ""
@@ -230,6 +231,16 @@ start_vpn() {
 }
 
 stop_vpn() {
+    section "Route Removal"
+    log info "Removing routes for shared subnets ${ICON_LOADING}..."
+    delete_routes
+    echo
+    log success "Routes removed. Container left running ${ICON_READY}."
+    log info "To also stop and remove the container: sudo bash manage.sh --down"
+    echo
+}
+
+down_vpn() {
     section "[1/2] Route Removal"
     log info "Removing routes for shared subnets ${ICON_LOADING}..."
     delete_routes
@@ -252,6 +263,7 @@ for arg in "$@"; do
     case "$arg" in
         --start|-s) ACTION="start" ;;
         --stop|-k)  ACTION="stop" ;;
+        --down)     ACTION="down" ;;
         --debug)    DEBUG_MODE="true" ;;
         --help|-h)  show_help; exit 0 ;;
         *)
@@ -272,6 +284,9 @@ case "$ACTION" in
         ;;
     stop)
         stop_vpn
+        ;;
+    down)
+        down_vpn
         ;;
     "")
         # No action given — if --debug alone, run the standalone validation
