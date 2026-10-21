@@ -63,7 +63,7 @@ bash manage.sh --help
 | VPN_USERNAME        | Username for OpenVPN authentication.                                         | myusername                       |
 | VPN_PASSWORD        | Password for OpenVPN authentication.                                         | mypassword                       |
 | CONTAINER_NAME      | Name of the Docker container for the VPN client. Must match docker-compose.   | openvpn-client                   |
-| SHARED_IPS          | Space-separated list of subnets to route through the VPN container.           | "192.168.1.0/24 10.0.0.0/16"    |
+| SHARED_IPS          | Subnets/hosts to route through the VPN container, one per line, `#` comments allowed. | See example below          |
 
 #### Example `.env` file
 
@@ -72,8 +72,16 @@ PATH_CONF=/home/user/vpn/myvpn.ovpn
 VPN_USERNAME=myusername
 VPN_PASSWORD=mypassword
 CONTAINER_NAME=openvpn-client
-SHARED_IPS="192.168.1.0/24 10.0.0.0/16"
+SHARED_IPS="
+    10.0.0.0/16         # whole /16 network
+    192.168.10.0/24     # one /24 segment
+    172.20.40.64/27     # smaller block: .64 - .95
+    192.168.1.42        # single host (= /32)
+"
 ```
+
+> Keep the value double-quoted: Docker Compose also parses `.env`. Duplicates and stray
+> commas are ignored, invalid entries and `/0` are skipped with a warning.
 
 > **Note:**
 > - All variables are required for correct operation.

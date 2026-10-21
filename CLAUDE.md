@@ -30,7 +30,7 @@ Required variables:
 - `PATH_CONF` — absolute host path to the `.ovpn` file; mounted into the container as `/root/vpn.ovpn`.
 - `VPN_USERNAME` / `VPN_PASSWORD` — passed to the container as `OVPN_USERNAME` / `OVPN_PASSWORD` and written to `/root/vpn.auth` by the entrypoint.
 - `CONTAINER_NAME` — must match `container_name` in `docker-compose.yml` (currently hardcoded to `openvpn-client` in both places; keep them in sync if renamed).
-- `SHARED_IPS` — space-separated list of subnets (e.g. `"192.168.1.0/24 10.0.0.0/16"`) that `manage.sh` routes through the container on the host.
+- `SHARED_IPS` — subnets/hosts that `manage.sh` routes through the container on the host. A multi-line double-quoted value, one entry per line with optional `#` comments (see `.env.example`). `parse_shared_ips` strips comments and commas, drops duplicates and skips invalid or `/0` entries. Docker Compose also parses `.env`, so the value must stay double-quoted: compose accepts multi-line quoted values, bash `source` alone would not drop the comments.
 
 ## Architecture
 
