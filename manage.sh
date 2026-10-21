@@ -28,7 +28,6 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-ENTRYPOINT_SCRIPT="/entrypoint.sh"
 ENV_FILE="${SCRIPT_DIR}/.env"
 DEBUG_MODE="false"
 
@@ -293,17 +292,18 @@ start_vpn() {
         log success "OpenVPN service is active in the container ${ICON_SUCCESS}."
     else
         log warning "Container is running but OpenVPN service is not active ${ICON_WARNING}."
-        log info "Trying to start OpenVPN service inside the container ${ICON_LOADING}..."
-        if docker exec -d "${CONTAINER_NAME}" bash "${ENTRYPOINT_SCRIPT}"; then
+        # OpenVPN is the container's PID 1, so restarting the container restarts it.
+        log info "Restarting the container ${ICON_LOADING}..."
+        if docker restart "${CONTAINER_NAME}" >/dev/null; then
             wait_for_vpn_startup
             if is_service_running; then
                 log success "OpenVPN service started successfully ${ICON_SUCCESS}."
             else
-                log error "Could not start OpenVPN service ${ICON_ERROR}."
+                log error "Could not start OpenVPN service, check: docker logs ${CONTAINER_NAME} ${ICON_ERROR}."
                 exit 1
             fi
         else
-            log error "Could not execute entrypoint inside the container ${ICON_ERROR}."
+            log error "Could not restart the container ${ICON_ERROR}."
             exit 1
         fi
     fi

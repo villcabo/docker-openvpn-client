@@ -9,25 +9,25 @@ networks:
 
 services:
   vpn:
+    image: villcabo/openvpn-client:1.0.0
     container_name: ${CONTAINER_NAME:-openvpn-client}
     build: ubuntu-custom
-    image: villcabo/openvpn-client:1.0.0
     restart: unless-stopped
     networks:
       vpn-network:
-    cap_add:
-      - NET_ADMIN
-      - SYS_ADMIN
-    devices:
-      - /dev/net/tun
-    sysctls:
-      net.ipv4.ip_forward: 1
     dns:
       - 199.3.0.253
-      - 8.8.8.8
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ${PATH_CONF:-/path/to/vpn.ovpn}:/root/vpn.ovpn
+      - ${PATH_CONF:-/path/to/vpn.ovpn}:/root/vpn.ovpn:ro
+    devices:
+      - /dev/net/tun
+    cap_add:
+      - NET_ADMIN
+    security_opt:
+      - no-new-privileges:true
+    sysctls:
+      net.ipv4.ip_forward: 1
     environment:
       OVPN_USERNAME: ${VPN_USERNAME}
       OVPN_PASSWORD: ${VPN_PASSWORD}
