@@ -156,42 +156,75 @@ resolve_container_net() {
     return 0
 }
 
+# Normalizes SHARED_IPS into one valid entry per line. Accepts one entry per
+# line or several per line, `#` starts a comment until end of line, and commas
+# are treated as separators. Duplicates are dropped (`x/32` == `x`); anything
+# that is not an IPv4 host or CIDR, or is a `/0` default route, is skipped with
+# a warning on stderr.
+parse_shared_ips() {
+    local line token
+    local -a tokens
+    local -A seen=()
+    while IFS= read -r line; do
+        line="${line%%#*}"
+        read -ra tokens <<< "${line//,/ }"
+        for token in "${tokens[@]}"; do
+            token="${token%/32}"
+            if [[ ! "$token" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}(/([1-9]|[12][0-9]|3[01]))?$ ]]; then
+                log warning "Ignoring invalid SHARED_IPS entry: '$token' ${ICON_WARNING}"
+                continue
+            fi
+            [ -n "${seen[$token]}" ] && continue
+            seen[$token]=1
+            echo "$token"
+        done
+    done <<< "$SHARED_IPS"
+}
+
 add_routes() {
     log info "Obtaining container IP and local interface..."
-    if [ -z "$SHARED_IPS" ]; then
-        log error "SHARED_IPS not defined in .env ${ICON_ERROR}"
+    local routes existing failed=0
+    routes=$(parse_shared_ips)
+    if [ -z "$routes" ]; then
+        log error "SHARED_IPS has no valid entries in .env ${ICON_ERROR}"
         return 1
     fi
     resolve_container_net || return 1
     log info "Container IP: $GREEN$BOLD$CONTAINER_IP$NC"
     log info "Local interface: $GREEN$LOCAL_INTERFACE$NC"
-    log info "Shared subnets: $GREEN$SHARED_IPS$NC"
+    log info "Shared subnets: $GREEN$(echo $routes)$NC"
     printf "\n${BOLD}%-25s %-18s %-18s %-3s${NC}\n" "Subnet" "Gateway" "Interface" "Status"
     printf "%-25s %-18s %-18s %-3s\n" "-------------------------" "------------------" "------------------" "------"
-    for IP in $SHARED_IPS; do
-        if ip route show | grep -q "^$IP "; then
+    for IP in $routes; do
+        existing=$(ip route show exact "$IP")
+        if [[ "$existing" == *"via $CONTAINER_IP "* ]]; then
             printf "%-25s %-18s %-18s ${YELLOW}%s ${ICON_WARNING}${NC}\n" "$IP" "$CONTAINER_IP" "$LOCAL_INTERFACE" "Already exists"
+        elif [ -n "$existing" ]; then
+            # Same prefix already routed elsewhere (e.g. local LAN); don't hijack it.
+            printf "%-25s %-18s %-18s ${RED}%s ${ICON_ERROR}${NC}\n" "$IP" "$CONTAINER_IP" "$LOCAL_INTERFACE" "Conflict: $existing"
+            failed=$((failed + 1))
+        elif ip route add "$IP" via "$CONTAINER_IP" dev "$LOCAL_INTERFACE" 2>/dev/null; then
+            printf "%-25s %-18s %-18s ${GREEN}%s ${ICON_SUCCESS}${NC}\n" "$IP" "$CONTAINER_IP" "$LOCAL_INTERFACE" "Added"
         else
-            ip route add $IP via $CONTAINER_IP dev $LOCAL_INTERFACE 2>/dev/null
-            if [ $? -eq 0 ]; then
-                printf "%-25s %-18s %-18s ${GREEN}%s ${ICON_SUCCESS}${NC}\n" "$IP" "$CONTAINER_IP" "$LOCAL_INTERFACE" "Added"
-            else
-                printf "%-25s %-18s %-18s ${RED}%s ${ICON_WARNING}${NC}\n" "$IP" "$CONTAINER_IP" "$LOCAL_INTERFACE" "Error"
-            fi
+            printf "%-25s %-18s %-18s ${RED}%s ${ICON_WARNING}${NC}\n" "$IP" "$CONTAINER_IP" "$LOCAL_INTERFACE" "Error"
+            failed=$((failed + 1))
         fi
     done
+    [ "$failed" -eq 0 ]
 }
 
 delete_routes() {
-    if [ -z "$SHARED_IPS" ]; then
-        log error "SHARED_IPS not defined in .env ${ICON_ERROR}"
+    local routes
+    routes=$(parse_shared_ips)
+    if [ -z "$routes" ]; then
+        log error "SHARED_IPS has no valid entries in .env ${ICON_ERROR}"
         return 1
     fi
     printf "\n${BOLD}%-25s %-10s${NC}\n" "Subnet" "Status"
     printf "%-25s %-10s\n" "-------------------------" "----------"
-    for IP in $SHARED_IPS; do
-        if ip route show | grep -q "^$IP "; then
-            ip route del $IP 2>/dev/null
+    for IP in $routes; do
+        if [ -n "$(ip route show exact "$IP")" ]; then
+            ip route del "$IP" 2>/dev/null
             if [ $? -eq 0 ]; then
                 printf "%-25s ${GREEN}%s ${ICON_SUCCESS}${NC}\n" "$IP" "Removed"
             else
@@ -277,10 +310,15 @@ start_vpn() {
 
     section "[3/3] Route & Forwarding Configuration"
     log info "Configuring routes for shared subnets..."
-    add_routes
+    local routes_ok=true
+    add_routes || routes_ok=false
     log info "Opening cross-container forwarding (DOCKER-USER)..."
     add_forwarding
     echo
+    if [ "$routes_ok" = false ]; then
+        log error "Some routes could not be configured, check the table above ${ICON_ERROR}"
+        exit 1
+    fi
     log success "All operations completed successfully ${ICON_READY}!"
     echo
 }
