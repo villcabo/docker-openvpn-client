@@ -138,19 +138,31 @@ wait_for_vpn_startup() {
     return 1
 }
 
+# Resolves CONTAINER_IP (VPN container bridge IP) and LOCAL_INTERFACE (the host
+# bridge device that fronts that IP, e.g. br-xxxx). Sets them as globals so the
+# routing and Docker-forwarding helpers share a single source of truth.
+resolve_container_net() {
+    CONTAINER_IP=$(docker inspect "$CONTAINER_NAME" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' 2>/dev/null)
+    if [ -z "$CONTAINER_IP" ]; then
+        log error "Could not get container IP ${ICON_ERROR}"
+        return 1
+    fi
+    LOCAL_INTERFACE=$(ip route get "$CONTAINER_IP" | awk '{for(i=1;i<=NF;i++){if($i=="dev"){print $(i+1); exit}}}')
+    if [ -z "$LOCAL_INTERFACE" ]; then
+        log error "Could not resolve host interface for $CONTAINER_IP ${ICON_ERROR}"
+        return 1
+    fi
+    log debug "Resolved $CONTAINER_IP via interface $LOCAL_INTERFACE"
+    return 0
+}
+
 add_routes() {
     log info "Obtaining container IP and local interface..."
     if [ -z "$SHARED_IPS" ]; then
         log error "SHARED_IPS not defined in .env ${ICON_ERROR}"
         return 1
     fi
-    CONTAINER_IP=$(docker inspect "$CONTAINER_NAME" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
-    if [ -z "$CONTAINER_IP" ]; then
-        log error "Could not get container IP ${ICON_ERROR}"
-        return 1
-    fi
-    LOCAL_INTERFACE=$(ip route get "$CONTAINER_IP" | awk '{for(i=1;i<=NF;i++){if($i=="dev"){print $(i+1); exit}}}')
-    log debug "Resolved local interface for $CONTAINER_IP: $LOCAL_INTERFACE"
+    resolve_container_net || return 1
     log info "Container IP: $GREEN$BOLD$CONTAINER_IP$NC"
     log info "Local interface: $GREEN$LOCAL_INTERFACE$NC"
     log info "Shared subnets: $GREEN$SHARED_IPS$NC"
@@ -191,6 +203,47 @@ delete_routes() {
     done
 }
 
+# Opens cross-network forwarding to the VPN container's bridge via the DOCKER-USER
+# chain (the supported hook that is evaluated BEFORE Docker's inter-network
+# isolation). Without this, only host-originated traffic reaches the VPN; other
+# containers live on different bridges and Docker's DOCKER-ISOLATION rules drop
+# the cross-bridge forward. Rules match on the bridge INTERFACE, not the container
+# IP — the forwarded packet's destination is the final shared IP, not the gateway.
+# NOTE: DOCKER-USER is flushed when the Docker daemon restarts, so --start re-adds.
+add_forwarding() {
+    resolve_container_net || return 1
+    log info "Bridge interface: $GREEN$LOCAL_INTERFACE$NC"
+    printf "\n${BOLD}%-45s %-3s${NC}\n" "DOCKER-USER rule" "Status"
+    printf "%-45s %-3s\n" "---------------------------------------------" "------"
+    for spec in "-o $LOCAL_INTERFACE" "-i $LOCAL_INTERFACE"; do
+        if iptables -C DOCKER-USER $spec -j ACCEPT 2>/dev/null; then
+            printf "%-45s ${YELLOW}%s ${ICON_WARNING}${NC}\n" "$spec -j ACCEPT" "Exists"
+        elif iptables -I DOCKER-USER $spec -j ACCEPT 2>/dev/null; then
+            printf "%-45s ${GREEN}%s ${ICON_SUCCESS}${NC}\n" "$spec -j ACCEPT" "Added"
+        else
+            printf "%-45s ${RED}%s ${ICON_ERROR}${NC}\n" "$spec -j ACCEPT" "Error"
+        fi
+    done
+}
+
+delete_forwarding() {
+    if ! resolve_container_net; then
+        log warning "Could not resolve VPN bridge; skipping DOCKER-USER cleanup ${ICON_WARNING}"
+        return 0
+    fi
+    printf "\n${BOLD}%-45s %-3s${NC}\n" "DOCKER-USER rule" "Status"
+    printf "%-45s %-3s\n" "---------------------------------------------" "------"
+    for spec in "-o $LOCAL_INTERFACE" "-i $LOCAL_INTERFACE"; do
+        if iptables -C DOCKER-USER $spec -j ACCEPT 2>/dev/null; then
+            iptables -D DOCKER-USER $spec -j ACCEPT 2>/dev/null \
+                && printf "%-45s ${GREEN}%s ${ICON_SUCCESS}${NC}\n" "$spec -j ACCEPT" "Removed" \
+                || printf "%-45s ${RED}%s ${ICON_ERROR}${NC}\n" "$spec -j ACCEPT" "Error"
+        else
+            printf "%-45s ${YELLOW}%s ${ICON_WARNING}${NC}\n" "$spec -j ACCEPT" "Not found"
+        fi
+    done
+}
+
 start_vpn() {
     section "[1/3] Container Status"
     if is_container_running; then
@@ -222,28 +275,34 @@ start_vpn() {
         fi
     fi
 
-    section "[3/3] Route Configuration"
+    section "[3/3] Route & Forwarding Configuration"
     log info "Configuring routes for shared subnets..."
     add_routes
+    log info "Opening cross-container forwarding (DOCKER-USER)..."
+    add_forwarding
     echo
     log success "All operations completed successfully ${ICON_READY}!"
     echo
 }
 
 stop_vpn() {
-    section "Route Removal"
+    section "Route & Forwarding Removal"
     log info "Removing routes for shared subnets ${ICON_LOADING}..."
     delete_routes
+    log info "Closing cross-container forwarding (DOCKER-USER)..."
+    delete_forwarding
     echo
-    log success "Routes removed. Container left running ${ICON_READY}."
+    log success "Routes and forwarding removed. Container left running ${ICON_READY}."
     log info "To also stop and remove the container: sudo bash manage.sh --down"
     echo
 }
 
 down_vpn() {
-    section "[1/2] Route Removal"
+    section "[1/2] Route & Forwarding Removal"
     log info "Removing routes for shared subnets ${ICON_LOADING}..."
     delete_routes
+    log info "Closing cross-container forwarding (DOCKER-USER)..."
+    delete_forwarding
     section "[2/2] Container Shutdown"
     if is_container_running; then
         log info "Stopping and removing container ${ICON_LOADING}..."
