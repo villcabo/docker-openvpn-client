@@ -32,10 +32,14 @@ iptables -S FORWARD
 #   --keepalive 10 60         detect a dead tunnel and reconnect (server may override)
 #   --persist-tun             keep tun0 across reconnects so the rules above stay valid
 #   --server-poll-timeout 5   skip unreachable `remote` entries quickly
+#   --disable-dco             keep the data channel in userspace: when a reconnect
+#                             recreated the kernel ovpn-dco device, the session came
+#                             back with control traffic alive but no data returning
 echo "Starting OpenVPN..."
 exec openvpn \
     --config "$VPN_CONF_FILE" \
     --auth-user-pass "$VPN_AUTH_FILE" \
     --keepalive 10 60 \
     --persist-tun \
-    --server-poll-timeout 5
+    --server-poll-timeout 5 \
+    --disable-dco

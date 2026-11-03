@@ -41,7 +41,7 @@ The project is a thin wrapper that turns a disposable Ubuntu container into a LA
    - Installs NAT/forwarding rules (idempotent, `iptables -C` guard) so traffic entering via `eth0` is MASQUERADEd out `tun0`. They reference `tun0` by name, so they go in before the interface exists:
      - `iptables -t nat -A POSTROUTING -o tun0 -j MASQUERADE`
      - `FORWARD` rules between `eth0` and `tun0` (stateful return path).
-   - `exec openvpn` in the foreground with `--keepalive 10 60 --persist-tun --server-poll-timeout 5`. OpenVPN becomes PID 1: its output is `docker logs`, it gets SIGTERM on `docker stop`, and if it exits the container exits and `restart: unless-stopped` brings it back.
+   - `exec openvpn` in the foreground with `--keepalive 10 60 --persist-tun --server-poll-timeout 5 --disable-dco`. OpenVPN becomes PID 1: its output is `docker logs`, it gets SIGTERM on `docker stop`, and if it exits the container exits and `restart: unless-stopped` brings it back.
 
 2. **`docker-compose.yml` — container runtime.** Declares a dedicated bridge network `vpn-network` with subnet `10.55.11.0/28`. Grants only `NET_ADMIN` (plus `no-new-privileges`), mounts `/dev/net/tun` and the `.ovpn` read-only, sets `net.ipv4.ip_forward=1`, and uses only the internal DNS. The container is not on the host network — clients reach it via its bridge IP, which `manage.sh` looks up dynamically.
 
@@ -61,4 +61,5 @@ The project is a thin wrapper that turns a disposable Ubuntu container into a LA
 - **Host routes persist only until `--stop`.** They are not written to any network config file; a reboot clears them, and re-running `--start` re-adds them.
 - **`DOCKER-USER` rules are flushed on Docker daemon restart** (not on container or host reboot of the VPN container alone — specifically `systemctl restart docker`). `--start` re-adds them idempotently (`iptables -C` guard). The rules match on the **bridge interface** (`-i/-o br-xxxx`), NOT the container IP — a forwarded packet's destination is the final `SHARED_IPS` address, not the VPN container's IP, so an IP-based match would never fire.
 - **Don't re-run the entrypoint with `docker exec`.** OpenVPN is PID 1; a second instance would fight it for `tun0`. Recovery is `docker restart`.
+- **Keep `--disable-dco`.** With DCO, OpenVPN 2.7 runs the data channel in the host kernel's `ovpn` module. A reconnect where the server pushed different options recreated that device, and the session came back with control traffic alive (no `ping-restart`) but no data returning. Process + `tun0` still looked healthy. A `docker restart` cleared it.
 - **A wrong password means a restart loop.** OpenVPN exits on `AUTH_FAILED`, the container restarts with Docker's backoff (capped at about one attempt a minute) and keeps hitting the VPN server until `--down`.
