@@ -76,7 +76,7 @@ SHARED_IPS="
     10.0.0.0/16         # whole /16 network
     192.168.10.0/24     # one /24 segment
     172.16.40.64/27     # smaller block: .64 - .95
-    192.168.10.42        # single host (= /32)
+    192.168.10.42       # single host (= /32)
 "
 ```
 

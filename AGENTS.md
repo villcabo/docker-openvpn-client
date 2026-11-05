@@ -43,7 +43,7 @@ The project is a thin wrapper that turns a disposable Ubuntu container into a LA
      - `FORWARD` rules between `eth0` and `tun0` (stateful return path).
    - `exec openvpn` in the foreground with `--keepalive 10 60 --persist-tun --server-poll-timeout 5 --disable-dco`. OpenVPN becomes PID 1: its output is `docker logs`, it gets SIGTERM on `docker stop`, and if it exits the container exits and `restart: unless-stopped` brings it back.
 
-2. **`docker-compose.yml` — container runtime.** Declares a dedicated bridge network `vpn-network` with subnet `10.55.11.0/28`. Grants only `NET_ADMIN` (plus `no-new-privileges`), mounts `/dev/net/tun` and the `.ovpn` read-only, sets `net.ipv4.ip_forward=1`, and uses only the internal DNS. The container is not on the host network — clients reach it via its bridge IP, which `manage.sh` looks up dynamically.
+2. **`docker-compose.yml` — container runtime.** Declares a dedicated bridge network `vpn-network` with subnet `10.55.11.0/28`. Grants only `NET_ADMIN` (plus `no-new-privileges`), mounts `/dev/net/tun` and the `.ovpn` read-only, sets `net.ipv4.ip_forward=1`, and uses a single DNS server from `VPN_DNS` (meant to be an internal resolver reached through the tunnel; defaults to `1.1.1.1`). The container is not on the host network — clients reach it via its bridge IP, which `manage.sh` looks up dynamically.
 
 3. **`manage.sh` — host-side orchestrator.** Run with `sudo`. Key phases:
    - `start_vpn`: ensures the container is up (`docker compose up -d`), validates the OpenVPN service via `is_service_running` (checks `pgrep openvpn` + presence of a `tun*` interface inside the container — not a ping test), and if missing, runs `docker restart` (OpenVPN is PID 1, so that restarts it). Then calls `add_routes`.
