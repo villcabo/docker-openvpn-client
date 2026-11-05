@@ -36,7 +36,7 @@ Required variables:
 
 The project is a thin wrapper that turns a disposable Ubuntu container into a LAN-side VPN gateway. Three pieces cooperate:
 
-1. **`ubuntu-custom/` — the container image** (`FROM ubuntu:26.04`). Installs `openvpn`, `iptables`, `iproute2`, `procps`. `entrypoint.sh`:
+1. **`ubuntu-custom/` — the container image** (`FROM ubuntu:26.04`). Installs `openvpn`, `iptables`, `iproute2`, `procps`, plus troubleshooting tools for use from `docker exec` (`ping`, `traceroute`, `mtr`, `telnet`, `nc`, `dig`, `curl`, `tcpdump`). They are for manual checks only, not health checks (see below). `entrypoint.sh`:
    - Writes credentials to `/root/vpn.auth` (mode 0600) from env vars.
    - Installs NAT/forwarding rules (idempotent, `iptables -C` guard) so traffic entering via `eth0` is MASQUERADEd out `tun0`. They reference `tun0` by name, so they go in before the interface exists:
      - `iptables -t nat -A POSTROUTING -o tun0 -j MASQUERADE`
